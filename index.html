@@ -467,3 +467,436 @@
     </script>
 </body>
 </html>
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.7); /* Black w/ opacity */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            margin: auto;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #cbd5e0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-button:hover {
+            color: #e2e8f0;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="min-h-screen flex flex-col">
+
+        <!-- Food Kiosk Page -->
+        <div id="food-kiosk-page" class="flex-1 relative">
+            <!-- Header Section -->
+            <header class="bg-gray-800 py-6 shadow-lg">
+                <div class="container text-center">
+                    <h1 class="text-4xl font-extrabold text-yellow-400">The Food Spot</h1>
+                    <p class="text-gray-400 text-lg mt-2">Fresh, Fast, and Delicious!</p>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="container mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Menu Section (Left & Center on Large Screens) -->
+                <section class="lg:col-span-2">
+                    <h2 class="text-3xl font-bold text-indigo-400 mb-6 text-center lg:text-left">Our Delicious Menu</h2>
+                    <div id="menu-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Menu items will be dynamically loaded here by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Order Summary Section (Right on Large Screens) -->
+                <aside class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg h-fit sticky top-8">
+                    <h2 class="text-3xl font-bold text-green-400 mb-6 text-center">Your Order</h2>
+                    <div id="order-list" class="space-y-4 mb-6 min-h-[100px]">
+                        <p id="empty-cart-message" class="text-gray-500 text-center">Your cart is empty. Add some delicious items!</p>
+                        <!-- Order items will be dynamically loaded here by JavaScript -->
+                    </div>
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <!-- Message for empty cart -->
+                        <p id="empty-cart-error" class="text-red-400 text-center mb-2 hidden">Your cart is empty. Add some items to order!</p>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xl font-bold text-gray-300">Total:</span>
+                            <span id="order-total" class="text-3xl font-extrabold text-yellow-300">$0.00</span>
+                        </div>
+                        <button id="complete-order-btn" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Complete Order
+                        </button>
+                    </div>
+                </aside>
+            </main>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal hidden">
+        <div class="modal-content text-center">
+            <span class="close-button" id="close-modal-btn">&times;</span>
+            <h3 class="text-3xl font-bold text-green-400 mb-4">Complete Your Order</h3>
+            <p class="text-gray-300 text-lg mb-6">
+                Please connect your MetaMask wallet and confirm the payment.
+            </p>
+            <div class="bg-gray-700 p-6 rounded-xl border border-gray-600 mb-6">
+                <p class="text-gray-400 text-sm mb-2">Total (approximate):</p>
+                <p id="modal-order-total-matic" class="text-4xl font-extrabold text-yellow-300 mb-4">0.00 MATIC</p>
+            </div>
+            
+            <div id="status-message" class="bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm" role="alert">
+                Awaiting connection...
+            </div>
+            
+            <div id="payment-buttons" class="space-y-4">
+                <button id="connect-wallet-btn" class="w-full flex items-center justify-center space-x-2 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" class="h-6 w-6">
+                    <span>Connect Wallet</span>
+                </button>
+                <button id="pay-now-btn" class="w-full flex items-center justify-center space-x-2 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Pay Now</span>
+                </button>
+            </div>
+            <button id="modal-close-btn-bottom" class="w-full py-3 mt-4 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                Close
+            </button>
+        </div>
+    </div>
+    
+    <!-- Footer Section -->
+    <footer id="kiosk-footer" class="bg-gray-800 py-6 mt-auto text-center text-gray-400">
+        <p>&copy; 2025 The Food Spot. All rights reserved.</p>
+    </footer>
+
+    <!-- Link to the external config file -->
+    <!-- The menu items and other constants are defined here -->
+    <script src="config.js"></script>
+
+    <script>
+        // --- DOM Elements ---
+        const menuItemsContainer = document.getElementById('menu-items-container');
+        const orderList = document.getElementById('order-list');
+        const orderTotalDisplay = document.getElementById('order-total');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const emptyCartError = document.getElementById('empty-cart-error');
+        const completeOrderBtn = document.getElementById('complete-order-btn');
+        const paymentModal = document.getElementById('payment-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalCloseBtnBottom = document.getElementById('modal-close-btn-bottom');
+        const modalOrderTotalMatic = document.getElementById('modal-order-total-matic');
+        const statusMessage = document.getElementById('status-message');
+        const connectWalletBtn = document.getElementById('connect-wallet-btn');
+        const payNowBtn = document.getElementById('pay-now-btn');
+
+        // --- State Variables ---
+        let cart = {};
+        let orderTotalUSD = 0;
+        let provider, signer;
+        let currentWalletAddress = null;
+
+        // Polygon Network Configuration
+        const polygonChainId = '0x89'; // 137 in hex
+        const paymentAddress = "0xYourPolygonWalletAddressHere"; // <-- REPLACE THIS WITH YOUR WALLET ADDRESS
+        // IMPORTANT: In a real app, you would use a price oracle to get the real-time conversion.
+        // For this example, we use a fixed rate.
+        const usdToMaticRate = 1; // 1 MATIC = 1 USD (for this example only)
+
+        // --- Food Kiosk Functions ---
+
+        // Renders all menu items
+        const renderMenuItems = () => {
+            menuItemsContainer.innerHTML = '';
+            menuItems.forEach(item => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'menu-item-card p-4';
+                itemCard.innerHTML = `
+                    <img src="${item.imageUrl}" alt="${item.name}" class="w-full h-40 object-cover rounded-md mb-4">
+                    <h3 class="text-xl font-bold text-white mb-1">${item.name}</h3>
+                    <p class="text-gray-400 text-sm mb-2">${item.description}</p>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-2xl font-extrabold text-green-400">$${item.price.toFixed(2)}</span>
+                        <button data-item-id="${item.id}" class="add-to-cart-btn px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition-colors duration-200">
+                            Add to Order
+                        </button>
+                    </div>
+                `;
+                menuItemsContainer.appendChild(itemCard);
+            });
+
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const itemId = e.target.dataset.itemId;
+                    addToCart(itemId);
+                });
+            });
+        };
+
+        // Adds an item to the cart
+        const addToCart = (itemId) => {
+            if (cart[itemId]) {
+                cart[itemId]++;
+            } else {
+                cart[itemId] = 1;
+            }
+            updateCartDisplay();
+            emptyCartError.classList.add('hidden'); // Hide the error message
+        };
+
+        // Updates the order summary display
+        const updateCartDisplay = () => {
+            orderList.innerHTML = '';
+            orderTotalUSD = 0;
+            let cartIsEmpty = true;
+
+            for (const itemId in cart) {
+                if (cart[itemId] > 0) {
+                    cartIsEmpty = false;
+                    const item = menuItems.find(m => m.id === itemId);
+                    if (item) {
+                        const itemTotal = item.price * cart[itemId];
+                        orderTotalUSD += itemTotal;
+
+                        const orderItemDiv = document.createElement('div');
+                        orderItemDiv.className = 'flex justify-between items-center bg-gray-700 p-3 rounded-md';
+                        orderItemDiv.innerHTML = `
+                            <div>
+                                <p class="font-semibold text-white">${item.name} x ${cart[itemId]}</p>
+                                <p class="text-gray-400 text-sm">$${item.price.toFixed(2)} each</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-yellow-300">$${itemTotal.toFixed(2)}</span>
+                                <button data-item-id="${item.id}" class="remove-from-cart-btn text-red-400 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-minus-circle"></i>
+                                </button>
+                            </div>
+                        `;
+                        orderList.appendChild(orderItemDiv);
+                    }
+                }
+            }
+
+            if (cartIsEmpty) {
+                emptyCartMessage.style.display = 'block';
+                completeOrderBtn.disabled = true;
+            } else {
+                emptyCartMessage.style.display = 'none';
+                completeOrderBtn.disabled = false;
+            }
+
+            orderTotalDisplay.textContent = `$${orderTotalUSD.toFixed(2)}`;
+
+            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const itemId = e.target.dataset.itemId;
+                    removeFromCart(itemId);
+                });
+            });
+        };
+
+        // Removes an item from the cart
+        const removeFromCart = (itemId) => {
+            if (cart[itemId] && cart[itemId] > 0) {
+                cart[itemId]--;
+                if (cart[itemId] === 0) {
+                    delete cart[itemId];
+                }
+            }
+            updateCartDisplay();
+        };
+
+        // Handles the "Complete Order" button click
+        const handleCompleteOrder = () => {
+            if (orderTotalUSD <= 0) {
+                emptyCartError.classList.remove('hidden');
+                setTimeout(() => {
+                    emptyCartError.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+            
+            const totalMatic = (orderTotalUSD / usdToMaticRate).toFixed(6);
+            modalOrderTotalMatic.textContent = `${totalMatic} MATIC`;
+            
+            statusMessage.textContent = 'Awaiting connection...';
+            statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+            connectWalletBtn.style.display = 'block';
+            payNowBtn.style.display = 'none';
+
+            paymentModal.style.display = 'flex';
+        };
+
+        // Closes the modal and resets the cart
+        const closePaymentModal = () => {
+            paymentModal.style.display = 'none';
+            cart = {};
+            updateCartDisplay();
+        };
+
+        // --- MetaMask & Polygon Functions ---
+
+        // Checks if MetaMask is installed
+        const isMetaMaskInstalled = () => {
+            return typeof window.ethereum !== 'undefined';
+        };
+
+        // Connects to the MetaMask wallet
+        const connectWallet = async () => {
+            if (!isMetaMaskInstalled()) {
+                statusMessage.textContent = 'MetaMask is not installed. Please install it to continue.';
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                return;
+            }
+
+            try {
+                connectWalletBtn.disabled = true;
+                connectWalletBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+                statusMessage.textContent = 'Connecting to MetaMask...';
+                statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+
+                // Request access to the user's accounts
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                currentWalletAddress = accounts[0];
+
+                // Check and switch to Polygon network
+                await switchNetworkToPolygon();
+
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+
+                statusMessage.textContent = `Connected! Address: ${currentWalletAddress.substring(0, 6)}...${currentWalletAddress.substring(38)}`;
+                statusMessage.className = 'bg-green-800 text-green-200 p-4 rounded-lg mb-4 text-sm';
+                connectWalletBtn.style.display = 'none';
+                payNowBtn.style.display = 'block';
+            } catch (error) {
+                statusMessage.textContent = `Error: ${error.message}`;
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                console.error("Connection failed:", error);
+            } finally {
+                connectWalletBtn.disabled = false;
+                connectWalletBtn.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" class="h-6 w-6"> <span>Connect Wallet</span>';
+            }
+        };
+
+        // Ensures the user is on the Polygon Mainnet
+        const switchNetworkToPolygon = async () => {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: polygonChainId }],
+                });
+            } catch (switchError) {
+                // This error code indicates that the chain has not been added to MetaMask.
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: polygonChainId,
+                                chainName: 'Polygon Mainnet',
+                                rpcUrls: ['https://polygon-rpc.com/'],
+                                nativeCurrency: {
+                                    name: 'MATIC',
+                                    symbol: 'MATIC',
+                                    decimals: 18
+                                },
+                                blockExplorerUrls: ['https://polygonscan.com/']
+                            }],
+                        });
+                    } catch (addError) {
+                        throw new Error('Failed to add Polygon network to MetaMask.');
+                    }
+                } else {
+                    throw new Error('Failed to switch to Polygon network.');
+                }
+            }
+        };
+
+        // Handles the actual payment transaction
+        const handlePolygonPayment = async () => {
+            if (!signer) {
+                statusMessage.textContent = 'Please connect your wallet first.';
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                return;
+            }
+
+            try {
+                payNowBtn.disabled = true;
+                payNowBtn.innerHTML = '<span class="spinner"></span> Processing...';
+                statusMessage.textContent = 'Please confirm the transaction in MetaMask...';
+                statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+
+                const totalMatic = orderTotalUSD / usdToMaticRate;
+                const tx = {
+                    to: paymentAddress,
+                    value: ethers.parseEther(totalMatic.toFixed(6)), // Convert to Wei
+                    gasLimit: 21000,
+                };
+
+                const transactionResponse = await signer.sendTransaction(tx);
+                statusMessage.textContent = `Transaction sent! Tx Hash: ${transactionResponse.hash.substring(0, 10)}...`;
+                statusMessage.className = 'bg-yellow-800 text-yellow-200 p-4 rounded-lg mb-4 text-sm';
+                console.log('Transaction details:', transactionResponse);
+
+                const receipt = await transactionResponse.wait();
+                statusMessage.textContent = `Payment successful! Transaction confirmed in block ${receipt.blockNumber}.`;
+                statusMessage.className = 'bg-green-800 text-green-200 p-4 rounded-lg mb-4 text-sm';
+                console.log('Transaction receipt:', receipt);
+
+            } catch (error) {
+                statusMessage.textContent = `Payment failed: ${error.message}`;
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                console.error("Payment failed:", error);
+            } finally {
+                payNowBtn.disabled = false;
+                payNowBtn.innerHTML = '<i class="fas fa-dollar-sign"></i> <span>Pay Now</span>';
+            }
+        };
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            completeOrderBtn.addEventListener('click', handleCompleteOrder);
+            closeModalBtn.addEventListener('click', closePaymentModal);
+            modalCloseBtnBottom.addEventListener('click', closePaymentModal);
+            connectWalletBtn.addEventListener('click', connectWallet);
+            payNowBtn.addEventListener('click', handlePolygonPayment);
+
+            // Initial page load
+            renderMenuItems();
+            updateCartDisplay();
+        });
+    </script>
+</body>
+</html>
