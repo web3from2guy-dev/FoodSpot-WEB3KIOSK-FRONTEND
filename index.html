@@ -31,43 +31,6 @@
         .menu-item-card:hover {
             transform: translateY(-5px);
         }
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 100; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0, 0, 0, 0.7); /* Black w/ opacity */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background-color: #2d3748;
-            margin: auto;
-            padding: 2.5rem;
-            border-radius: 1rem;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-        .close-button {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #cbd5e0;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .close-button:hover {
-            color: #e2e8f0;
-        }
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid #fff;
@@ -121,45 +84,19 @@
                             <span class="text-xl font-bold text-gray-300">Total:</span>
                             <span id="order-total" class="text-3xl font-extrabold text-yellow-300">$0.00</span>
                         </div>
-                        <button id="complete-order-btn" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            Complete Order
+
+                        <!-- Status message display area -->
+                        <div id="status-message" class="bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm hidden" role="alert">
+                            Awaiting action...
+                        </div>
+                        
+                        <!-- The new Polygon payment button -->
+                        <button id="pay-with-polygon-btn" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-wallet mr-2"></i>Pay with Polygon
                         </button>
                     </div>
                 </aside>
             </main>
-        </div>
-    </div>
-
-    <!-- Payment Modal -->
-    <div id="payment-modal" class="modal hidden">
-        <div class="modal-content text-center">
-            <span class="close-button" id="close-modal-btn">&times;</span>
-            <h3 class="text-3xl font-bold text-green-400 mb-4">Complete Your Order</h3>
-            <p class="text-gray-300 text-lg mb-6">
-                Please connect your MetaMask wallet and confirm the payment.
-            </p>
-            <div class="bg-gray-700 p-6 rounded-xl border border-gray-600 mb-6">
-                <p class="text-gray-400 text-sm mb-2">Total (approximate):</p>
-                <p id="modal-order-total-matic" class="text-4xl font-extrabold text-yellow-300 mb-4">0.00 MATIC</p>
-            </div>
-            
-            <div id="status-message" class="bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm" role="alert">
-                Awaiting connection...
-            </div>
-            
-            <div id="payment-buttons" class="space-y-4">
-                <button id="connect-wallet-btn" class="w-full flex items-center justify-center space-x-2 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" class="h-6 w-6">
-                    <span>Connect Wallet</span>
-                </button>
-                <button id="pay-now-btn" class="w-full flex items-center justify-center space-x-2 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>Pay Now</span>
-                </button>
-            </div>
-            <button id="modal-close-btn-bottom" class="w-full py-3 mt-4 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition-colors duration-200">
-                Close
-            </button>
         </div>
     </div>
     
@@ -168,10 +105,18 @@
         <p>&copy; 2025 The Food Spot. All rights reserved.</p>
     </footer>
 
-    <!-- Link to the external config file -->
-    <!-- The menu items and other constants are defined here -->
-    <script src="config.js"></script>
-
+    <!-- Simplified in-page config for self-contained code -->
+    <script>
+        const menuItems = [
+            { id: 'burger', name: 'Classic Burger', description: 'A juicy beef patty with lettuce, tomato, and our special sauce.', price: 9.99, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Classic+Burger' },
+            { id: 'fries', name: 'Crispy Fries', description: 'Golden, crispy, and perfectly salted french fries.', price: 3.49, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Crispy+Fries' },
+            { id: 'soda', name: 'Fountain Soda', description: 'Choose your favorite from a variety of refreshing flavors.', price: 2.29, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Fountain+Soda' },
+            { id: 'hotdog', name: 'Gourmet Hot Dog', description: 'An all-beef hot dog on a toasted bun with relish and onions.', price: 5.99, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Gourmet+Hot+Dog' },
+            { id: 'salad', name: 'Garden Salad', description: 'Fresh mixed greens with cherry tomatoes, cucumbers, and a vinaigrette.', price: 7.50, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Garden+Salad' },
+            { id: 'shake', name: 'Chocolate Shake', description: 'Rich and creamy chocolate milkshake.', price: 4.99, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Chocolate+Shake' }
+        ];
+    </script>
+    
     <script>
         // --- DOM Elements ---
         const menuItemsContainer = document.getElementById('menu-items-container');
@@ -179,20 +124,13 @@
         const orderTotalDisplay = document.getElementById('order-total');
         const emptyCartMessage = document.getElementById('empty-cart-message');
         const emptyCartError = document.getElementById('empty-cart-error');
-        const completeOrderBtn = document.getElementById('complete-order-btn');
-        const paymentModal = document.getElementById('payment-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const modalCloseBtnBottom = document.getElementById('modal-close-btn-bottom');
-        const modalOrderTotalMatic = document.getElementById('modal-order-total-matic');
+        const payWithPolygonBtn = document.getElementById('pay-with-polygon-btn');
         const statusMessage = document.getElementById('status-message');
-        const connectWalletBtn = document.getElementById('connect-wallet-btn');
-        const payNowBtn = document.getElementById('pay-now-btn');
 
         // --- State Variables ---
         let cart = {};
         let orderTotalUSD = 0;
         let provider, signer;
-        let currentWalletAddress = null;
 
         // Polygon Network Configuration
         const polygonChainId = '0x89'; // 137 in hex
@@ -277,10 +215,10 @@
 
             if (cartIsEmpty) {
                 emptyCartMessage.style.display = 'block';
-                completeOrderBtn.disabled = true;
+                payWithPolygonBtn.disabled = true;
             } else {
                 emptyCartMessage.style.display = 'none';
-                completeOrderBtn.disabled = false;
+                payWithPolygonBtn.disabled = false;
             }
 
             orderTotalDisplay.textContent = `$${orderTotalUSD.toFixed(2)}`;
@@ -303,33 +241,31 @@
             }
             updateCartDisplay();
         };
-
-        // Handles the "Complete Order" button click
-        const handleCompleteOrder = () => {
-            if (orderTotalUSD <= 0) {
-                emptyCartError.classList.remove('hidden');
-                setTimeout(() => {
-                    emptyCartError.classList.add('hidden');
-                }, 3000);
-                return;
+        
+        // Updates the status message display
+        const updateStatus = (message, type = 'info') => {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden');
+            
+            // Reset existing classes
+            statusMessage.classList.remove('bg-blue-800', 'bg-green-800', 'bg-yellow-800', 'bg-red-800', 
+                                         'text-blue-200', 'text-green-200', 'text-yellow-200', 'text-red-200');
+            
+            // Set new classes based on message type
+            switch (type) {
+                case 'info':
+                    statusMessage.classList.add('bg-blue-800', 'text-blue-200');
+                    break;
+                case 'success':
+                    statusMessage.classList.add('bg-green-800', 'text-green-200');
+                    break;
+                case 'warning':
+                    statusMessage.classList.add('bg-yellow-800', 'text-yellow-200');
+                    break;
+                case 'error':
+                    statusMessage.classList.add('bg-red-800', 'text-red-200');
+                    break;
             }
-            
-            const totalMatic = (orderTotalUSD / usdToMaticRate).toFixed(6);
-            modalOrderTotalMatic.textContent = `${totalMatic} MATIC`;
-            
-            statusMessage.textContent = 'Awaiting connection...';
-            statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
-            connectWalletBtn.style.display = 'block';
-            payNowBtn.style.display = 'none';
-
-            paymentModal.style.display = 'flex';
-        };
-
-        // Closes the modal and resets the cart
-        const closePaymentModal = () => {
-            paymentModal.style.display = 'none';
-            cart = {};
-            updateCartDisplay();
         };
 
         // --- MetaMask & Polygon Functions ---
@@ -338,42 +274,66 @@
         const isMetaMaskInstalled = () => {
             return typeof window.ethereum !== 'undefined';
         };
-
-        // Connects to the MetaMask wallet
-        const connectWallet = async () => {
-            if (!isMetaMaskInstalled()) {
-                statusMessage.textContent = 'MetaMask is not installed. Please install it to continue.';
-                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+        
+        // Handles the entire payment process on button click
+        const handlePolygonPayment = async () => {
+            if (orderTotalUSD <= 0) {
+                emptyCartError.classList.remove('hidden');
+                setTimeout(() => {
+                    emptyCartError.classList.add('hidden');
+                }, 3000);
                 return;
             }
+            
+            if (!isMetaMaskInstalled()) {
+                updateStatus('MetaMask is not installed. Please install it to continue.', 'error');
+                return;
+            }
+            
+            payWithPolygonBtn.disabled = true;
+            payWithPolygonBtn.innerHTML = '<span class="spinner"></span> Connecting...';
 
             try {
-                connectWalletBtn.disabled = true;
-                connectWalletBtn.innerHTML = '<span class="spinner"></span> Connecting...';
-                statusMessage.textContent = 'Connecting to MetaMask...';
-                statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+                updateStatus('Connecting to MetaMask...', 'info');
 
                 // Request access to the user's accounts
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                currentWalletAddress = accounts[0];
+                const currentWalletAddress = accounts[0];
 
                 // Check and switch to Polygon network
                 await switchNetworkToPolygon();
-
+                
                 provider = new ethers.BrowserProvider(window.ethereum);
                 signer = await provider.getSigner();
 
-                statusMessage.textContent = `Connected! Address: ${currentWalletAddress.substring(0, 6)}...${currentWalletAddress.substring(38)}`;
-                statusMessage.className = 'bg-green-800 text-green-200 p-4 rounded-lg mb-4 text-sm';
-                connectWalletBtn.style.display = 'none';
-                payNowBtn.style.display = 'block';
+                updateStatus(`Wallet connected: ${currentWalletAddress.substring(0, 6)}...${currentWalletAddress.substring(38)}`, 'success');
+
+                // Initiate transaction
+                const totalMatic = orderTotalUSD / usdToMaticRate;
+                const tx = {
+                    to: paymentAddress,
+                    value: ethers.parseEther(totalMatic.toFixed(6)), // Convert to Wei
+                    gasLimit: 21000,
+                };
+                
+                updateStatus('Please confirm the transaction in MetaMask...', 'warning');
+                const transactionResponse = await signer.sendTransaction(tx);
+                
+                updateStatus(`Transaction sent! Tx Hash: ${transactionResponse.hash.substring(0, 10)}...`, 'info');
+                
+                const receipt = await transactionResponse.wait();
+                updateStatus(`Payment successful! Transaction confirmed in block ${receipt.blockNumber}. Your order is complete!`, 'success');
+                
+                // Clear the cart after successful payment
+                cart = {};
+                updateCartDisplay();
+                
             } catch (error) {
-                statusMessage.textContent = `Error: ${error.message}`;
-                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
-                console.error("Connection failed:", error);
+                updateStatus(`Payment failed: ${error.message}`, 'error');
+                console.error("Payment failed:", error);
             } finally {
-                connectWalletBtn.disabled = false;
-                connectWalletBtn.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" class="h-6 w-6"> <span>Connect Wallet</span>';
+                payWithPolygonBtn.disabled = false;
+                payWithPolygonBtn.innerHTML = '<i class="fas fa-wallet mr-2"></i>Pay with Polygon';
             }
         };
 
@@ -410,55 +370,10 @@
                 }
             }
         };
-
-        // Handles the actual payment transaction
-        const handlePolygonPayment = async () => {
-            if (!signer) {
-                statusMessage.textContent = 'Please connect your wallet first.';
-                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
-                return;
-            }
-
-            try {
-                payNowBtn.disabled = true;
-                payNowBtn.innerHTML = '<span class="spinner"></span> Processing...';
-                statusMessage.textContent = 'Please confirm the transaction in MetaMask...';
-                statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
-
-                const totalMatic = orderTotalUSD / usdToMaticRate;
-                const tx = {
-                    to: paymentAddress,
-                    value: ethers.parseEther(totalMatic.toFixed(6)), // Convert to Wei
-                    gasLimit: 21000,
-                };
-
-                const transactionResponse = await signer.sendTransaction(tx);
-                statusMessage.textContent = `Transaction sent! Tx Hash: ${transactionResponse.hash.substring(0, 10)}...`;
-                statusMessage.className = 'bg-yellow-800 text-yellow-200 p-4 rounded-lg mb-4 text-sm';
-                console.log('Transaction details:', transactionResponse);
-
-                const receipt = await transactionResponse.wait();
-                statusMessage.textContent = `Payment successful! Transaction confirmed in block ${receipt.blockNumber}.`;
-                statusMessage.className = 'bg-green-800 text-green-200 p-4 rounded-lg mb-4 text-sm';
-                console.log('Transaction receipt:', receipt);
-
-            } catch (error) {
-                statusMessage.textContent = `Payment failed: ${error.message}`;
-                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
-                console.error("Payment failed:", error);
-            } finally {
-                payNowBtn.disabled = false;
-                payNowBtn.innerHTML = '<i class="fas fa-dollar-sign"></i> <span>Pay Now</span>';
-            }
-        };
-
+        
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
-            completeOrderBtn.addEventListener('click', handleCompleteOrder);
-            closeModalBtn.addEventListener('click', closePaymentModal);
-            modalCloseBtnBottom.addEventListener('click', closePaymentModal);
-            connectWalletBtn.addEventListener('click', connectWallet);
-            payNowBtn.addEventListener('click', handlePolygonPayment);
+            payWithPolygonBtn.addEventListener('click', handlePolygonPayment);
 
             // Initial page load
             renderMenuItems();
