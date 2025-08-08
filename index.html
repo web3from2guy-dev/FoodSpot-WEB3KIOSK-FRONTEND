@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ethers.js library for Web3 functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -66,30 +68,17 @@
         .close-button:hover {
             color: #e2e8f0;
         }
-        .copy-button {
-            background-color: #48bb78; /* Green-500 */
-            color: #1a202c;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            transition: background-color 0.2s ease-in-out;
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
         }
-        .copy-button:hover {
-            background-color: #38a169; /* Green-600 */
-        }
-        .cashapp-link {
-            background-color: #00d68f; /* Cash App green */
-            color: #1a202c;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .cashapp-link:hover {
-            background-color: #00b377;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -141,46 +130,46 @@
         </div>
     </div>
 
-    <!-- Order Confirmation Modal -->
-    <div id="order-modal" class="modal hidden">
-        <div class="modal-content">
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal hidden">
+        <div class="modal-content text-center">
             <span class="close-button" id="close-modal-btn">&times;</span>
-            <h3 class="text-3xl font-bold text-green-400 mb-4 text-center">Order Confirmed!</h3>
-            <p class="text-gray-300 text-lg mb-6 text-center">
-                Your order is ready. Please make your payment using Cash App with the Order ID below.
+            <h3 class="text-3xl font-bold text-green-400 mb-4">Complete Your Order</h3>
+            <p class="text-gray-300 text-lg mb-6">
+                Please connect your MetaMask wallet and confirm the payment.
             </p>
-            
-            <div class="bg-gray-700 p-6 rounded-xl border border-gray-600 mb-6 text-center">
-                <p class="text-gray-400 text-sm mb-2">Your Total:</p>
-                <p id="modal-order-total" class="text-4xl font-extrabold text-yellow-300 mb-4">$0.00</p>
-                
-                <p class="text-gray-400 text-sm mb-2">Order ID:</p>
-                <div class="flex items-center justify-center space-x-2 mb-4">
-                    <span id="transaction-id-display" class="text-lg font-mono text-indigo-300 break-all"></span>
-                    <button id="copy-transaction-id-btn" class="copy-button flex items-center space-x-2">
-                        <i class="fas fa-copy"></i> <span id="copy-btn-text">Copy</span>
-                    </button>
-                </div>
-                
-                <p class="text-gray-400 text-sm mb-2">Pay via:</p>
-                <a id="cashapp-pay-link" href="https://cash.app" target="_blank" class="cashapp-link">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Cash_App_Logo.png/640px-Cash_App_Logo.png" alt="Cash App Logo" class="h-6 w-6 mr-2">
-                    <span>Pay with Cash App</span>
-                </a>
+            <div class="bg-gray-700 p-6 rounded-xl border border-gray-600 mb-6">
+                <p class="text-gray-400 text-sm mb-2">Total (approximate):</p>
+                <p id="modal-order-total-matic" class="text-4xl font-extrabold text-yellow-300 mb-4">0.00 MATIC</p>
             </div>
-
-            <button id="modal-close-btn" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+            
+            <div id="status-message" class="bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm" role="alert">
+                Awaiting connection...
+            </div>
+            
+            <div id="payment-buttons" class="space-y-4">
+                <button id="connect-wallet-btn" class="w-full flex items-center justify-center space-x-2 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" class="h-6 w-6">
+                    <span>Connect Wallet</span>
+                </button>
+                <button id="pay-now-btn" class="w-full flex items-center justify-center space-x-2 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Pay Now</span>
+                </button>
+            </div>
+            <button id="modal-close-btn-bottom" class="w-full py-3 mt-4 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition-colors duration-200">
                 Close
             </button>
         </div>
     </div>
-
+    
     <!-- Footer Section -->
     <footer id="kiosk-footer" class="bg-gray-800 py-6 mt-auto text-center text-gray-400">
         <p>&copy; 2025 The Food Spot. All rights reserved.</p>
     </footer>
 
     <!-- Link to the external config file -->
+    <!-- The menu items and other constants are defined here -->
     <script src="config.js"></script>
 
     <script>
@@ -191,17 +180,26 @@
         const emptyCartMessage = document.getElementById('empty-cart-message');
         const emptyCartError = document.getElementById('empty-cart-error');
         const completeOrderBtn = document.getElementById('complete-order-btn');
-        const orderModal = document.getElementById('order-modal');
+        const paymentModal = document.getElementById('payment-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        const modalOrderTotal = document.getElementById('modal-order-total');
-        const transactionIdDisplay = document.getElementById('transaction-id-display');
-        const copyTransactionIdBtn = document.getElementById('copy-transaction-id-btn');
-        const copyBtnText = document.getElementById('copy-btn-text');
+        const modalCloseBtnBottom = document.getElementById('modal-close-btn-bottom');
+        const modalOrderTotalMatic = document.getElementById('modal-order-total-matic');
+        const statusMessage = document.getElementById('status-message');
+        const connectWalletBtn = document.getElementById('connect-wallet-btn');
+        const payNowBtn = document.getElementById('pay-now-btn');
 
         // --- State Variables ---
         let cart = {};
-        let orderTotal = 0;
+        let orderTotalUSD = 0;
+        let provider, signer;
+        let currentWalletAddress = null;
+
+        // Polygon Network Configuration
+        const polygonChainId = '0x89'; // 137 in hex
+        const paymentAddress = "0xYourPolygonWalletAddressHere"; // <-- REPLACE THIS WITH YOUR WALLET ADDRESS
+        // IMPORTANT: In a real app, you would use a price oracle to get the real-time conversion.
+        // For this example, we use a fixed rate.
+        const usdToMaticRate = 1; // 1 MATIC = 1 USD (for this example only)
 
         // --- Food Kiosk Functions ---
 
@@ -247,7 +245,7 @@
         // Updates the order summary display
         const updateCartDisplay = () => {
             orderList.innerHTML = '';
-            orderTotal = 0;
+            orderTotalUSD = 0;
             let cartIsEmpty = true;
 
             for (const itemId in cart) {
@@ -256,7 +254,7 @@
                     const item = menuItems.find(m => m.id === itemId);
                     if (item) {
                         const itemTotal = item.price * cart[itemId];
-                        orderTotal += itemTotal;
+                        orderTotalUSD += itemTotal;
 
                         const orderItemDiv = document.createElement('div');
                         orderItemDiv.className = 'flex justify-between items-center bg-gray-700 p-3 rounded-md';
@@ -285,7 +283,7 @@
                 completeOrderBtn.disabled = false;
             }
 
-            orderTotalDisplay.textContent = `$${orderTotal.toFixed(2)}`;
+            orderTotalDisplay.textContent = `$${orderTotalUSD.toFixed(2)}`;
 
             document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -306,21 +304,9 @@
             updateCartDisplay();
         };
 
-        // Generates a simple unique ID (no database dependency)
-        const generateOrderId = () => {
-            const date = new Date();
-            const year = date.getFullYear().toString().slice(-2);
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            const time = date.toTimeString().slice(0, 8).replace(/:/g, '');
-            const random = Math.random().toString(36).slice(2, 6).toUpperCase();
-            return `ORDER-${year}${month}${day}-${random}`;
-        };
-
         // Handles the "Complete Order" button click
         const handleCompleteOrder = () => {
-            if (orderTotal <= 0) {
-                // Use a temporary UI message instead of alert()
+            if (orderTotalUSD <= 0) {
                 emptyCartError.classList.remove('hidden');
                 setTimeout(() => {
                     emptyCartError.classList.add('hidden');
@@ -328,47 +314,151 @@
                 return;
             }
             
-            modalOrderTotal.textContent = `$${orderTotal.toFixed(2)}`;
-            transactionIdDisplay.textContent = generateOrderId();
-            copyBtnText.textContent = 'Copy';
+            const totalMatic = (orderTotalUSD / usdToMaticRate).toFixed(6);
+            modalOrderTotalMatic.textContent = `${totalMatic} MATIC`;
+            
+            statusMessage.textContent = 'Awaiting connection...';
+            statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+            connectWalletBtn.style.display = 'block';
+            payNowBtn.style.display = 'none';
 
-            orderModal.style.display = 'flex';
-        };
-
-        // Copies the transaction ID to clipboard
-        const copyTransactionId = () => {
-            const textToCopy = transactionIdDisplay.textContent;
-            const tempInput = document.createElement('textarea');
-            tempInput.value = textToCopy;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            try {
-                document.execCommand('copy');
-                copyBtnText.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtnText.textContent = 'Copy';
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-                // In a real app, you'd show a user-facing error message here
-            } finally {
-                document.body.removeChild(tempInput);
-            }
+            paymentModal.style.display = 'flex';
         };
 
         // Closes the modal and resets the cart
-        const closeOrderModal = () => {
-            orderModal.style.display = 'none';
+        const closePaymentModal = () => {
+            paymentModal.style.display = 'none';
             cart = {};
             updateCartDisplay();
+        };
+
+        // --- MetaMask & Polygon Functions ---
+
+        // Checks if MetaMask is installed
+        const isMetaMaskInstalled = () => {
+            return typeof window.ethereum !== 'undefined';
+        };
+
+        // Connects to the MetaMask wallet
+        const connectWallet = async () => {
+            if (!isMetaMaskInstalled()) {
+                statusMessage.textContent = 'MetaMask is not installed. Please install it to continue.';
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                return;
+            }
+
+            try {
+                connectWalletBtn.disabled = true;
+                connectWalletBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+                statusMessage.textContent = 'Connecting to MetaMask...';
+                statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+
+                // Request access to the user's accounts
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                currentWalletAddress = accounts[0];
+
+                // Check and switch to Polygon network
+                await switchNetworkToPolygon();
+
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+
+                statusMessage.textContent = `Connected! Address: ${currentWalletAddress.substring(0, 6)}...${currentWalletAddress.substring(38)}`;
+                statusMessage.className = 'bg-green-800 text-green-200 p-4 rounded-lg mb-4 text-sm';
+                connectWalletBtn.style.display = 'none';
+                payNowBtn.style.display = 'block';
+            } catch (error) {
+                statusMessage.textContent = `Error: ${error.message}`;
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                console.error("Connection failed:", error);
+            } finally {
+                connectWalletBtn.disabled = false;
+                connectWalletBtn.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask Logo" class="h-6 w-6"> <span>Connect Wallet</span>';
+            }
+        };
+
+        // Ensures the user is on the Polygon Mainnet
+        const switchNetworkToPolygon = async () => {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: polygonChainId }],
+                });
+            } catch (switchError) {
+                // This error code indicates that the chain has not been added to MetaMask.
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: polygonChainId,
+                                chainName: 'Polygon Mainnet',
+                                rpcUrls: ['https://polygon-rpc.com/'],
+                                nativeCurrency: {
+                                    name: 'MATIC',
+                                    symbol: 'MATIC',
+                                    decimals: 18
+                                },
+                                blockExplorerUrls: ['https://polygonscan.com/']
+                            }],
+                        });
+                    } catch (addError) {
+                        throw new Error('Failed to add Polygon network to MetaMask.');
+                    }
+                } else {
+                    throw new Error('Failed to switch to Polygon network.');
+                }
+            }
+        };
+
+        // Handles the actual payment transaction
+        const handlePolygonPayment = async () => {
+            if (!signer) {
+                statusMessage.textContent = 'Please connect your wallet first.';
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                return;
+            }
+
+            try {
+                payNowBtn.disabled = true;
+                payNowBtn.innerHTML = '<span class="spinner"></span> Processing...';
+                statusMessage.textContent = 'Please confirm the transaction in MetaMask...';
+                statusMessage.className = 'bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm';
+
+                const totalMatic = orderTotalUSD / usdToMaticRate;
+                const tx = {
+                    to: paymentAddress,
+                    value: ethers.parseEther(totalMatic.toFixed(6)), // Convert to Wei
+                    gasLimit: 21000,
+                };
+
+                const transactionResponse = await signer.sendTransaction(tx);
+                statusMessage.textContent = `Transaction sent! Tx Hash: ${transactionResponse.hash.substring(0, 10)}...`;
+                statusMessage.className = 'bg-yellow-800 text-yellow-200 p-4 rounded-lg mb-4 text-sm';
+                console.log('Transaction details:', transactionResponse);
+
+                const receipt = await transactionResponse.wait();
+                statusMessage.textContent = `Payment successful! Transaction confirmed in block ${receipt.blockNumber}.`;
+                statusMessage.className = 'bg-green-800 text-green-200 p-4 rounded-lg mb-4 text-sm';
+                console.log('Transaction receipt:', receipt);
+
+            } catch (error) {
+                statusMessage.textContent = `Payment failed: ${error.message}`;
+                statusMessage.className = 'bg-red-800 text-red-200 p-4 rounded-lg mb-4 text-sm';
+                console.error("Payment failed:", error);
+            } finally {
+                payNowBtn.disabled = false;
+                payNowBtn.innerHTML = '<i class="fas fa-dollar-sign"></i> <span>Pay Now</span>';
+            }
         };
 
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
             completeOrderBtn.addEventListener('click', handleCompleteOrder);
-            closeModalBtn.addEventListener('click', closeOrderModal);
-            modalCloseBtn.addEventListener('click', closeOrderModal);
-            copyTransactionIdBtn.addEventListener('click', copyTransactionId);
+            closeModalBtn.addEventListener('click', closePaymentModal);
+            modalCloseBtnBottom.addEventListener('click', closePaymentModal);
+            connectWalletBtn.addEventListener('click', connectWallet);
+            payNowBtn.addEventListener('click', handlePolygonPayment);
 
             // Initial page load
             renderMenuItems();
