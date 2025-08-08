@@ -180,53 +180,10 @@
         <p>&copy; 2025 The Food Spot. All rights reserved.</p>
     </footer>
 
-    <script>
-        // --- Data for Menu Items ---
-        const menuItems = [
-            {
-                id: 'burger',
-                name: 'Classic Burger',
-                price: 12.50,
-                description: 'Juicy beef patty, lettuce, tomato, onion, pickles, and our special sauce.',
-                imageUrl: 'https://placehold.co/300x200/ffcc00/000000?text=Burger'
-            },
-            {
-                id: 'fries',
-                name: 'Crispy Fries',
-                price: 4.00,
-                description: 'Golden-brown, perfectly salted, and irresistibly crispy.',
-                imageUrl: 'https://placehold.co/300x200/ffcc00/000000?text=Fries'
-            },
-            {
-                id: 'shake',
-                name: 'Vanilla Milkshake',
-                price: 6.00,
-                description: 'Creamy vanilla ice cream blended to perfection.',
-                imageUrl: 'https://placehold.co/300x200/ffcc00/000000?text=Shake'
-            },
-            {
-                id: 'pizza',
-                name: 'Pepperoni Pizza Slice',
-                price: 5.50,
-                description: 'A classic slice with rich tomato sauce, mozzarella, and pepperoni.',
-                imageUrl: 'https://placehold.co/300x200/ffcc00/000000?text=Pizza'
-            },
-            {
-                id: 'salad',
-                name: 'Garden Salad',
-                price: 8.00,
-                description: 'Fresh mixed greens, cherry tomatoes, cucumber, and a light vinaigrette.',
-                imageUrl: 'https://placehold.co/300x200/ffcc00/000000?text=Salad'
-            },
-            {
-                id: 'soda',
-                name: 'Soft Drink',
-                price: 2.50,
-                description: 'Your choice of refreshing Coca-Cola, Sprite, or Fanta.',
-                imageUrl: 'https://placehold.co/300x200/ffcc00/000000?text=Soda'
-            }
-        ];
+    <!-- Link to the external config file -->
+    <script src="config.js"></script>
 
+    <script>
         // --- DOM Elements ---
         const menuItemsContainer = document.getElementById('menu-items-container');
         const orderList = document.getElementById('order-list');
@@ -393,8 +350,7 @@
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy text: ', err);
-                // Use a different UI method if execCommand fails.
-                alert('Failed to copy. Please copy the order ID manually: ' + textToCopy);
+                // In a real app, you'd show a user-facing error message here
             } finally {
                 document.body.removeChild(tempInput);
             }
