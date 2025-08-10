@@ -141,11 +141,9 @@
         let cart = {};
         let orderTotalUSD = 0;
         let provider, signer;
-        let maticUsdRate = 0; // This variable will store the real-time MATIC/USD price.
+        // The MATIC/USD rate is now hardcoded for demonstration purposes
+        let maticUsdRate = 0.75; 
         let isFetchingPrice = false;
-
-        // CoinGecko API Key - from your input
-        const coinGeckoApiKey = "CG-GvBmqgVFg8FRhHs6mZatY32q";
 
         // Polygon Network Configuration
         const polygonChainId = '0x89'; // 137 in hex
@@ -230,10 +228,7 @@
                 payWithPolygonBtn.disabled = true;
             } else {
                 emptyCartMessage.style.display = 'none';
-                // Only enable the button if the price has been fetched
-                if (!isFetchingPrice && maticUsdRate > 0) {
-                    payWithPolygonBtn.disabled = false;
-                }
+                payWithPolygonBtn.disabled = false;
             }
             
             // Display the total in USD
@@ -248,7 +243,7 @@
                 orderTotalDisplayUSD.classList.remove('text-3xl');
                 orderTotalDisplayUSD.classList.add('text-xl');
             } else {
-                orderTotalDisplayMATIC.textContent = 'Fetching price...';
+                orderTotalDisplayMATIC.textContent = 'Error fetching price';
                 // Hide the USD price and make the "Fetching" message prominent
                 orderTotalDisplayUSD.classList.add('hidden');
             }
@@ -299,58 +294,55 @@
         };
 
         // --- Fetch the real-time MATIC price from CoinGecko using the API key ---
-        const fetchMaticPrice = async () => {
-            isFetchingPrice = true;
-            payWithPolygonBtn.disabled = true;
+        // This function is now commented out because API calls are often blocked
+        // in sandbox environments. Instead, we are using a hardcoded price.
+        // const fetchMaticPrice = async () => {
+        //     isFetchingPrice = true;
+        //     payWithPolygonBtn.disabled = true;
             
-            // This button is only on the kiosk page. We'll add a check to make sure it exists
-            if (payWithPolygonBtn) {
-                 payWithPolygonBtn.innerHTML = '<span class="spinner"></span> Getting Price...';
-            }
+        //     if (payWithPolygonBtn) {
+        //          payWithPolygonBtn.innerHTML = '<span class="spinner"></span> Getting Price...';
+        //     }
 
-            const apiKey = "CG-GvBmqgVFg8FRhHs6mZatY32q";
-            const apiUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=polygon`;
-            const headers = { 'x-cg-demo-api-key': apiKey };
+        //     const apiKey = "CG-GvBmqgVFg8FRhHs6mZatY32q";
+        //     const apiUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=polygon`;
+        //     const headers = { 'x-cg-demo-api-key': apiKey };
 
-            for (let i = 0; i < 3; i++) { // Retry up to 3 times
-                try {
-                    const response = await fetch(apiUrl, { headers });
-                    if (!response.ok) {
-                        if (response.status === 429) {
-                            console.log(`Rate limit hit, retrying in ${2 ** i}s...`);
-                            await new Promise(res => setTimeout(res, (2 ** i) * 1000));
-                            continue;
-                        }
-                        throw new Error(`Failed to fetch MATIC price with status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    maticUsdRate = data[0].current_price;
+        //     for (let i = 0; i < 3; i++) {
+        //         try {
+        //             const response = await fetch(apiUrl, { headers });
+        //             if (!response.ok) {
+        //                 if (response.status === 429) {
+        //                     console.log(`Rate limit hit, retrying in ${2 ** i}s...`);
+        //                     await new Promise(res => setTimeout(res, (2 ** i) * 1000));
+        //                     continue;
+        //                 }
+        //                 throw new Error(`Failed to fetch MATIC price with status: ${response.status}`);
+        //             }
+        //             const data = await response.json();
+        //             maticUsdRate = data[0].current_price;
                     
-                    isFetchingPrice = false;
-                    payWithPolygonBtn.disabled = false;
-                    updateCartDisplay();
+        //             isFetchingPrice = false;
+        //             payWithPolygonBtn.disabled = false;
+        //             updateCartDisplay();
                     
-                    console.log(`Current MATIC price: $${maticUsdRate}`);
-                    if (payWithPolygonBtn) {
-                         payWithPolygonBtn.innerHTML = '<i class="fas fa-wallet mr-2"></i>Pay with Polygon';
-                    }
-                    return; // Exit the loop on success
-                } catch (error) {
-                    console.error("Error fetching MATIC price:", error);
-                    // Do not update status here to avoid spamming the UI on retries
-                }
-            }
-
-            // If all retries fail
-            isFetchingPrice = false;
-            orderTotalDisplayMATIC.textContent = 'Error fetching price';
-            updateStatus('Failed to get real-time price. Please try again later.', 'error');
-            payWithPolygonBtn.disabled = true; // Disable payment if price can't be fetched
-            if (payWithPolygonBtn) {
-                payWithPolygonBtn.innerHTML = '<i class="fas fa-wallet mr-2"></i>Pay with Polygon';
-            }
-        };
-
+        //             console.log(`Current MATIC price: $${maticUsdRate}`);
+        //             if (payWithPolygonBtn) {
+        //                  payWithPolygonBtn.innerHTML = '<i class="fas fa-wallet mr-2"></i>Pay with Polygon';
+        //             }
+        //             return;
+        //         } catch (error) {
+        //             console.error("Error fetching MATIC price:", error);
+        //         }
+        //     }
+        //     isFetchingPrice = false;
+        //     orderTotalDisplayMATIC.textContent = 'Error fetching price';
+        //     updateStatus('Failed to get real-time price. Please try again later.', 'error');
+        //     payWithPolygonBtn.disabled = true;
+        //     if (payWithPolygonBtn) {
+        //         payWithPolygonBtn.innerHTML = '<i class="fas fa-wallet mr-2"></i>Pay with Polygon';
+        //     }
+        // };
 
         // --- MetaMask & Polygon Functions ---
 
@@ -464,429 +456,11 @@
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
             payWithPolygonBtn.addEventListener('click', handlePolygonPayment);
-            fetchMaticPrice();
-            renderMenuItems();
-            updateCartDisplay();
-        });
-    </script>
-</body>
-</html>
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body class="bg-gray-900">
-
-    <!-- Main Application Container -->
-    <div id="app-container" class="min-h-screen flex flex-col">
-
-        <!-- Food Kiosk Page -->
-        <div id="food-kiosk-page" class="flex-1 relative">
-            <!-- Header Section -->
-            <header class="bg-gray-800 py-6 shadow-lg">
-                <div class="container text-center">
-                    <h1 class="text-4xl font-extrabold text-yellow-400">The Food Spot</h1>
-                    <p class="text-gray-400 text-lg mt-2">Fresh, Fast, and Delicious!</p>
-                </div>
-            </header>
-
-            <!-- Main Content Area -->
-            <main class="container mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Menu Section (Left & Center on Large Screens) -->
-                <section class="lg:col-span-2">
-                    <h2 class="text-3xl font-bold text-indigo-400 mb-6 text-center lg:text-left">Our Delicious Menu</h2>
-                    <div id="menu-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Menu items will be dynamically loaded here by JavaScript -->
-                    </div>
-                </section>
-
-                <!-- Order Summary Section (Right on Large Screens) -->
-                <aside class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg h-fit sticky top-8">
-                    <h2 class="text-3xl font-bold text-green-400 mb-6 text-center">Your Order</h2>
-                    <div id="order-list" class="space-y-4 mb-6 min-h-[100px]">
-                        <p id="empty-cart-message" class="text-gray-500 text-center">Your cart is empty. Add some delicious items!</p>
-                        <!-- Order items will be dynamically loaded here by JavaScript -->
-                    </div>
-                    <div class="border-t border-gray-700 pt-4 mt-4">
-                        <!-- Message for empty cart -->
-                        <p id="empty-cart-error" class="text-red-400 text-center mb-2 hidden">Your cart is empty. Add some items to order!</p>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xl font-bold text-gray-300">Total:</span>
-                            <span id="order-total-usd" class="text-xl font-extrabold text-yellow-300">$0.00</span>
-                        </div>
-                        <!-- New element to display the total in MATIC -->
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-xl font-bold text-gray-300">Total (MATIC):</span>
-                            <span id="order-total-matic" class="text-2xl font-extrabold text-purple-400">0.00 MATIC</span>
-                        </div>
-
-                        <!-- Status message display area -->
-                        <div id="status-message" class="bg-blue-800 text-blue-200 p-4 rounded-lg mb-4 text-sm hidden" role="alert">
-                            Awaiting action...
-                        </div>
-                        
-                        <!-- The new Polygon payment button -->
-                        <button id="pay-with-polygon-btn" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-wallet mr-2"></i>Pay with Polygon
-                        </button>
-                    </div>
-                </aside>
-            </main>
-        </div>
-    </div>
-    
-    <!-- Footer Section -->
-    <footer id="kiosk-footer" class="bg-gray-800 py-6 mt-auto text-center text-gray-400">
-        <p>&copy; 2025 The Food Spot. All rights reserved.</p>
-    </footer>
-
-    <!-- Simplified in-page config for self-contained code -->
-    <script>
-        const menuItems = [
-            { id: 'burger', name: 'Classic Burger', description: 'A juicy beef patty with lettuce, tomato, and our special sauce.', price: 9.99, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Classic+Burger' },
-            { id: 'fries', name: 'Crispy Fries', description: 'Golden, crispy, and perfectly salted french fries.', price: 3.49, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Crispy+Fries' },
-            { id: 'soda', name: 'Fountain Soda', description: 'Choose your favorite from a variety of refreshing flavors.', price: 2.29, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Fountain+Soda' },
-            { id: 'hotdog', name: 'Gourmet Hot Dog', description: 'An all-beef hot dog on a toasted bun with relish and onions.', price: 5.99, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Gourmet+Hot+Dog' },
-            { id: 'salad', name: 'Garden Salad', description: 'Fresh mixed greens with cherry tomatoes, cucumbers, and a vinaigrette.', price: 7.50, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Garden+Salad' },
-            { id: 'shake', name: 'Chocolate Shake', description: 'Rich and creamy chocolate milkshake.', price: 4.99, imageUrl: 'https://placehold.co/400x200/4a5568/a0aec0?text=Chocolate+Shake' }
-        ];
-    </script>
-    
-    <script>
-        // --- DOM Elements ---
-        const menuItemsContainer = document.getElementById('menu-items-container');
-        const orderList = document.getElementById('order-list');
-        const orderTotalDisplayUSD = document.getElementById('order-total-usd');
-        const orderTotalDisplayMATIC = document.getElementById('order-total-matic');
-        const emptyCartMessage = document.getElementById('empty-cart-message');
-        const emptyCartError = document.getElementById('empty-cart-error');
-        const payWithPolygonBtn = document.getElementById('pay-with-polygon-btn');
-        const statusMessage = document.getElementById('status-message');
-
-        // --- State Variables ---
-        let cart = {};
-        let orderTotalUSD = 0;
-        let provider, signer;
-        let maticUsdRate = 0; // This variable will store the real-time MATIC/USD price.
-        let isFetchingPrice = false;
-
-        // CoinGecko API Key - from your input
-        const coinGeckoApiKey = "CG-GvBmqgVFg8FRhHs6mZatY32q";
-
-        // Polygon Network Configuration
-        const polygonChainId = '0x89'; // 137 in hex
-        const paymentAddress = "0x5093873aa4ec1a9a9eba26e26e41cfb13b35cbba"; // <-- REPLACE THIS WITH YOUR WALLET ADDRESS
-        
-        // --- Food Kiosk Functions ---
-
-        // Renders all menu items
-        const renderMenuItems = () => {
-            menuItemsContainer.innerHTML = '';
-            menuItems.forEach(item => {
-                const itemCard = document.createElement('div');
-                itemCard.className = 'menu-item-card p-4';
-                itemCard.innerHTML = `
-                    <img src="${item.imageUrl}" alt="${item.name}" class="w-full h-40 object-cover rounded-md mb-4">
-                    <h3 class="text-xl font-bold text-white mb-1">${item.name}</h3>
-                    <p class="text-gray-400 text-sm mb-2">${item.description}</p>
-                    <div class="flex justify-between items-center mt-4">
-                        <span class="text-2xl font-extrabold text-green-400">$${item.price.toFixed(2)}</span>
-                        <button data-item-id="${item.id}" class="add-to-cart-btn px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg hover:bg-indigo-600 transition-colors duration-200">
-                            Add to Order
-                        </button>
-                    </div>
-                `;
-                menuItemsContainer.appendChild(itemCard);
-            });
-
-            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const itemId = e.target.dataset.itemId;
-                    addToCart(itemId);
-                });
-            });
-        };
-
-        // Adds an item to the cart
-        const addToCart = (itemId) => {
-            if (cart[itemId]) {
-                cart[itemId]++;
-            } else {
-                cart[itemId] = 1;
-            }
-            updateCartDisplay();
-            emptyCartError.classList.add('hidden'); // Hide the error message
-        };
-
-        // Updates the order summary display
-        const updateCartDisplay = () => {
-            orderList.innerHTML = '';
-            orderTotalUSD = 0;
-            let cartIsEmpty = true;
-
-            for (const itemId in cart) {
-                if (cart[itemId] > 0) {
-                    cartIsEmpty = false;
-                    const item = menuItems.find(m => m.id === itemId);
-                    if (item) {
-                        const itemTotal = item.price * cart[itemId];
-                        orderTotalUSD += itemTotal;
-
-                        const orderItemDiv = document.createElement('div');
-                        orderItemDiv.className = 'flex justify-between items-center bg-gray-700 p-3 rounded-md';
-                        orderItemDiv.innerHTML = `
-                            <div>
-                                <p class="font-semibold text-white">${item.name} x ${cart[itemId]}</p>
-                                <p class="text-gray-400 text-sm">$${item.price.toFixed(2)} each</p>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="font-bold text-yellow-300">$${itemTotal.toFixed(2)}</span>
-                                <button data-item-id="${item.id}" class="remove-from-cart-btn text-red-400 hover:text-red-500 transition-colors">
-                                    <i class="fas fa-minus-circle"></i>
-                                </button>
-                            </div>
-                        `;
-                        orderList.appendChild(orderItemDiv);
-                    }
-                }
-            }
-
-            if (cartIsEmpty) {
-                emptyCartMessage.style.display = 'block';
-                payWithPolygonBtn.disabled = true;
-            } else {
-                emptyCartMessage.style.display = 'none';
-                // Only enable the button if the price has been fetched
-                if (!isFetchingPrice && maticUsdRate > 0) {
-                    payWithPolygonBtn.disabled = false;
-                }
-            }
             
-            // Display the total in USD
-            orderTotalDisplayUSD.textContent = `$${orderTotalUSD.toFixed(2)}`;
+            // We no longer need to call a function to fetch the price.
+            // The price is now hardcoded.
+            // fetchMaticPrice();
 
-            // Check if we have a valid MATIC price before converting
-            if (maticUsdRate > 0) {
-                const totalMatic = orderTotalUSD / maticUsdRate;
-                orderTotalDisplayMATIC.textContent = `${totalMatic.toFixed(6)} MATIC`;
-                // Show the USD price and make it smaller again
-                orderTotalDisplayUSD.classList.remove('hidden');
-                orderTotalDisplayUSD.classList.remove('text-3xl');
-                orderTotalDisplayUSD.classList.add('text-xl');
-            } else {
-                orderTotalDisplayMATIC.textContent = 'Fetching price...';
-                // Hide the USD price and make the "Fetching" message prominent
-                orderTotalDisplayUSD.classList.add('hidden');
-            }
-
-            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const itemId = e.target.dataset.itemId;
-                    removeFromCart(itemId);
-                });
-            });
-        };
-
-        // Removes an item from the cart
-        const removeFromCart = (itemId) => {
-            if (cart[itemId] && cart[itemId] > 0) {
-                cart[itemId]--;
-                if (cart[itemId] === 0) {
-                    delete cart[itemId];
-                }
-            }
-            updateCartDisplay();
-        };
-        
-        // Updates the status message display
-        const updateStatus = (message, type = 'info') => {
-            statusMessage.textContent = message;
-            statusMessage.classList.remove('hidden');
-            
-            // Reset existing classes
-            statusMessage.classList.remove('bg-blue-800', 'bg-green-800', 'bg-yellow-800', 'bg-red-800', 
-                                             'text-blue-200', 'text-green-200', 'text-yellow-200', 'text-red-200');
-            
-            // Set new classes based on message type
-            switch (type) {
-                case 'info':
-                    statusMessage.classList.add('bg-blue-800', 'text-blue-200');
-                    break;
-                case 'success':
-                    statusMessage.classList.add('bg-green-800', 'text-green-200');
-                    break;
-                case 'warning':
-                    statusMessage.classList.add('bg-yellow-800', 'text-yellow-200');
-                    break;
-                case 'error':
-                    statusMessage.classList.add('bg-red-800', 'text-red-200');
-                    break;
-            }
-        };
-
-        // --- NEW FUNCTION: Fetch the real-time MATIC price from CoinGecko using the API key ---
-        const fetchMaticPrice = async () => {
-            isFetchingPrice = true;
-            payWithPolygonBtn.disabled = true;
-
-            const apiKey = "CG-GvBmqgVFg8FRhHs6mZatY32q";
-            const apiUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=polygon`;
-            const headers = { 'x-cg-demo-api-key': apiKey };
-
-            for (let i = 0; i < 3; i++) { // Retry up to 3 times
-                try {
-                    const response = await fetch(apiUrl, { headers });
-                    if (!response.ok) {
-                        if (response.status === 429) {
-                            console.log(`Rate limit hit, retrying in ${2 ** i}s...`);
-                            await new Promise(res => setTimeout(res, (2 ** i) * 1000));
-                            continue;
-                        }
-                        throw new Error(`Failed to fetch MATIC price with status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    maticUsdRate = data[0].current_price;
-                    
-                    isFetchingPrice = false;
-                    payWithPolygonBtn.disabled = false;
-                    updateCartDisplay();
-                    
-                    console.log(`Current MATIC price: $${maticUsdRate}`);
-                    return; // Exit the loop on success
-                } catch (error) {
-                    console.error("Error fetching MATIC price:", error);
-                    // Do not update status here to avoid spamming the UI on retries
-                }
-            }
-
-            // If all retries fail
-            isFetchingPrice = false;
-            orderTotalDisplayMATIC.textContent = 'Error fetching price';
-            updateStatus('Failed to get real-time price. Please try again later.', 'error');
-            payWithPolygonBtn.disabled = true; // Disable payment if price can't be fetched
-        };
-
-
-        // --- MetaMask & Polygon Functions ---
-
-        // Checks if MetaMask is installed
-        const isMetaMaskInstalled = () => {
-            return typeof window.ethereum !== 'undefined';
-        };
-        
-        // Handles the entire payment process on button click
-        const handlePolygonPayment = async () => {
-            if (orderTotalUSD <= 0) {
-                emptyCartError.classList.remove('hidden');
-                setTimeout(() => {
-                    emptyCartError.classList.add('hidden');
-                }, 3000);
-                return;
-            }
-            
-            if (!isMetaMaskInstalled()) {
-                updateStatus('MetaMask is not installed. Please install it to continue.', 'error');
-                return;
-            }
-            
-            // Check if MATIC price is available
-            if (maticUsdRate <= 0) {
-                updateStatus('MATIC price is not available. Please wait and try again.', 'error');
-                return;
-            }
-
-            payWithPolygonBtn.disabled = true;
-            payWithPolygonBtn.innerHTML = '<span class="spinner"></span> Connecting...';
-
-            try {
-                updateStatus('Connecting to MetaMask...', 'info');
-
-                // Request access to the user's accounts
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                const currentWalletAddress = accounts[0];
-
-                // Check and switch to Polygon network
-                await switchNetworkToPolygon();
-                
-                provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner();
-
-                updateStatus(`Wallet connected: ${currentWalletAddress.substring(0, 6)}...${currentWalletAddress.substring(38)}`, 'success');
-
-                // Initiate transaction
-                const totalMatic = orderTotalUSD / maticUsdRate;
-
-                const tx = {
-                    to: paymentAddress,
-                    value: ethers.parseEther(totalMatic.toFixed(6)), 
-                    gasLimit: 21000,
-                };
-                
-                updateStatus('Please confirm the transaction in MetaMask...', 'warning');
-                const transactionResponse = await signer.sendTransaction(tx);
-                
-                updateStatus(`Transaction sent! Tx Hash: ${transactionResponse.hash.substring(0, 10)}...`, 'info');
-                
-                const receipt = await transactionResponse.wait();
-                updateStatus(`Payment successful! Transaction confirmed in block ${receipt.blockNumber}. Your order is complete!`, 'success');
-                
-                // Clear the cart after successful payment
-                cart = {};
-                updateCartDisplay();
-                
-            } catch (error) {
-                updateStatus(`Payment failed: ${error.message}`, 'error');
-                console.error("Payment failed:", error);
-            } finally {
-                payWithPolygonBtn.disabled = false;
-                payWithPolygonBtn.innerHTML = '<i class="fas fa-wallet mr-2"></i>Pay with Polygon';
-            }
-        };
-
-        // Ensures the user is on the Polygon Mainnet
-        const switchNetworkToPolygon = async () => {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: polygonChainId }],
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: polygonChainId,
-                                chainName: 'Polygon Mainnet',
-                                rpcUrls: ['https://polygon-rpc.com/'],
-                                nativeCurrency: {
-                                    name: 'MATIC',
-                                    symbol: 'MATIC',
-                                    decimals: 18
-                                },
-                                blockExplorerUrls: ['https://polygonscan.com/']
-                            }],
-                        });
-                    } catch (addError) {
-                        throw new Error('Failed to add Polygon network to MetaMask.');
-                    }
-                } else {
-                    throw new Error('Failed to switch to Polygon network.');
-                }
-            }
-        };
-        
-        // --- Event Listeners ---
-        document.addEventListener('DOMContentLoaded', () => {
-            payWithPolygonBtn.addEventListener('click', handlePolygonPayment);
-            fetchMaticPrice();
             renderMenuItems();
             updateCartDisplay();
         });
