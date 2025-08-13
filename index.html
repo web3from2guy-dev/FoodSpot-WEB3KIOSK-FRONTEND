@@ -16,7 +16,7 @@
     <!-- === 3. CUSTOMER KIOSK & PAYWALL === -->
     <div id="kiosk-page" class="min-h-screen">
         <header class="bg-gray-800 p-6 text-center rounded-b-xl mb-6">
-            <button id="kiosk-back-btn" onclick="window.location.href='https://web3from2guy-dev.github.io/FoodSpot-WEB3KIOSK-STARTPAGE/'" class="absolute left-4 top-6 text-gray-400 hover:text-white transition">
+            <button id="kiosk-back-btn" onclick="window.location.href='start.html'" class="absolute left-4 top-6 text-gray-400 hover:text-white transition">
                 <i class="fas fa-arrow-left"></i> Back
             </button>
             <h1 id="kiosk-store-title" class="text-3xl font-extrabold text-yellow-400">The Food Spot</h1>
@@ -36,8 +36,9 @@
                     <p class="text-gray-400">No items yet.</p>
                 </div>
                 <div class="mt-4">
-                    <div class="flex justify-between mb-2"><span>Total</span><span id="total-usd">$0.00</span></div>
-                    <div class="flex justify-between mb-4"><span>Total (USDC)</span><span id="total-usdc">0.00 USDC</span></div>
+                    <div class="flex justify-between mb-2"><span>Platform Fee</span><span>0.01 USDC</span></div>
+                    <div class="flex justify-between mb-2"><span>Total (USD)</span><span id="total-usd">$0.00</span></div>
+                    <div class="flex justify-between mb-4"><span>Total (USDC incl. fee)</span><span id="total-usdc">0.00 USDC</span></div>
                     <button id="pay-btn" class="w-full py-3 bg-indigo-600 rounded-xl text-white font-bold transition disabled:opacity-50" disabled>
                         <i class="fas fa-wallet mr-2"></i>Pay with Polygon
                     </button>
@@ -118,6 +119,8 @@
 
         // --- 3. Configuration for Blockchain Payments ---
         const USDC_POLYGON_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+        const PLATFORM_FEE_ADDRESS = "0x5093873aa4EC1A9A9eba26E26e41CFb13b35CBba";
+        const PLATFORM_FEE_AMOUNT_USDC = 0.01;
         const usdcAbi = ["function transfer(address to, uint256 amount) returns (bool)"];
         const polygonChainId = '0x89';
         
@@ -257,8 +260,9 @@
                 document.querySelectorAll('.remove-btn').forEach(b => b.addEventListener('click', e => removeFromCart(e.currentTarget.dataset.id)));
                 if(payBtn) payBtn.disabled = false;
             }
+            const totalWithFee = total + PLATFORM_FEE_AMOUNT_USDC;
             if(totalUsdSpan) totalUsdSpan.textContent = '$' + total.toFixed(2);
-            if(totalUsdcSpan) totalUsdcSpan.textContent = total.toFixed(2) + ' USDC';
+            if(totalUsdcSpan) totalUsdcSpan.textContent = totalWithFee.toFixed(2) + ' USDC';
         }
 
         // --- Blockchain Payment functions
@@ -310,10 +314,16 @@
                 const provider = new ethers.BrowserProvider(window.ethereum);
                 const signer = await provider.getSigner();
                 const usdcContract = new ethers.Contract(USDC_POLYGON_ADDRESS, usdcAbi, signer);
-                const amount = ethers.parseUnits(totalUSD.toFixed(2), 6); // USDC has 6 decimals
 
-                const tx = await usdcContract.transfer(config.usdcWalletAddress, amount);
-                await tx.wait();
+                // Payment for the platform fee
+                const platformFeeAmount = ethers.parseUnits(PLATFORM_FEE_AMOUNT_USDC.toFixed(2), 6);
+                const platformFeeTx = await usdcContract.transfer(PLATFORM_FEE_ADDRESS, platformFeeAmount);
+                await platformFeeTx.wait();
+
+                // Payment for the store
+                const storePaymentAmount = ethers.parseUnits(totalUSD.toFixed(2), 6);
+                const storePaymentTx = await usdcContract.transfer(config.usdcWalletAddress, storePaymentAmount);
+                await storePaymentTx.wait();
 
                 // Add the order to Firestore
                 const ordersCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/orders`);
