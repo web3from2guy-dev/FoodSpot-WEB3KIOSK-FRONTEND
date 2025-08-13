@@ -70,6 +70,9 @@
     </div>
 
     <script type="module">
+        // Disable the right-click context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
         // --- Import Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -81,6 +84,7 @@
         let config = {
             storeName: 'The Food Spot',
             storeLogo: '',
+            usdcWalletAddress: '', // Add the wallet address field
             products: []
         };
         let cart = {};
@@ -114,8 +118,6 @@
 
         // --- 3. Configuration for Blockchain Payments ---
         const USDC_POLYGON_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
-        // WARNING: This is a critical security vulnerability. For a commercial app, this should be stored securely.
-        const RECEIVING_WALLET = "YOUR_WALLET_ADDRESS_HERE"; 
         const usdcAbi = ["function transfer(address to, uint256 amount) returns (bool)"];
         const polygonChainId = '0x89';
         
@@ -129,6 +131,7 @@
                 if (doc.exists()) {
                     config.storeName = doc.data().storeName;
                     config.storeLogo = doc.data().storeLogo;
+                    config.usdcWalletAddress = doc.data().usdcWalletAddress;
                     if (kioskStoreTitle) kioskStoreTitle.textContent = config.storeName || 'The Food Spot';
                 }
             }, (error) => { console.error("Error fetching store info:", error); });
@@ -309,7 +312,7 @@
                 const usdcContract = new ethers.Contract(USDC_POLYGON_ADDRESS, usdcAbi, signer);
                 const amount = ethers.parseUnits(totalUSD.toFixed(2), 6); // USDC has 6 decimals
 
-                const tx = await usdcContract.transfer(RECEIVING_WALLET, amount);
+                const tx = await usdcContract.transfer(config.usdcWalletAddress, amount);
                 await tx.wait();
 
                 // Add the order to Firestore
