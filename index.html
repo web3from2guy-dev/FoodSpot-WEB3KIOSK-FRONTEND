@@ -1,209 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Order Menu — Kiosk</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://usdc-admin-dashboard-1.netlify.app/"/>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
-  <style>body{font-family:Inter,ui-sans-serif,system-ui;background:#0b1220;color:#e6eef8}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Food Spot - Kiosk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="min-h-screen">
-  <header class="bg-gray-800 p-6 text-center">
-    <a href="../index.html" class="absolute left-4 top-6 text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i> Back</a>
-    <h1 id="store-title" class="text-3xl font-extrabold text-yellow-400">The Food Spot</h1>
-  </header>
+<body class="bg-gray-900 text-white min-h-screen p-6">
 
-  <main class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <section class="lg:col-span-2">
-      <h2 class="text-2xl text-indigo-300 mb-4">Our Menu</h2>
-      <div id="menu-items" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-    </section>
+    <!-- === 3. CUSTOMER KIOSK & PAYWALL === -->
+    <div id="kiosk-page" class="min-h-screen">
+        <header class="bg-gray-800 p-6 text-center rounded-b-xl mb-6">
+            <button id="kiosk-back-btn" onclick="window.location.href='start.html'" class="absolute left-4 top-6 text-gray-400 hover:text-white transition">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <h1 id="kiosk-store-title" class="text-3xl font-extrabold text-yellow-400">The Food Spot</h1>
+        </header>
+        
+        <main class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <section class="lg:col-span-2">
+                <h2 class="text-2xl text-indigo-300 mb-4">Our Menu</h2>
+                <div id="menu-items" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="loading-kiosk-menu" class="p-6 bg-gray-700 rounded text-center">Loading menu...</div>
+                </div>
+            </section>
+    
+            <aside class="bg-gray-800 p-4 rounded-xl lg:col-span-1 h-fit sticky top-6">
+                <h3 class="text-xl text-green-300 mb-4">Your Order</h3>
+                <div id="order-list" class="space-y-3 min-h-[120px]">
+                    <p class="text-gray-400">No items yet.</p>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between mb-2"><span>Total</span><span id="total-usd">$0.00</span></div>
+                    <div class="flex justify-between mb-4"><span>Total (USDC)</span><span id="total-usdc">0.00 USDC</span></div>
+                    <button id="pay-btn" class="w-full py-3 bg-indigo-600 rounded-xl text-white font-bold transition disabled:opacity-50" disabled>
+                        <i class="fas fa-wallet mr-2"></i>Pay with Polygon
+                    </button>
+                </div>
+            </aside>
+        </main>
+    </div>
 
-    <aside class="bg-gray-800 p-4 rounded lg:col-span-1">
-      <h3 class="text-xl text-green-300 mb-4">Your Order</h3>
-      <div id="order-list" class="space-y-3 min-h-[120px]">
-        <p class="text-gray-400">No items yet.</p>
-      </div>
-      <div class="mt-4">
-        <div class="flex justify-between mb-2"><span>Total</span><span id="total-usd">$0.00</span></div>
-        <div class="flex justify-between mb-4"><span>Total (USDC)</span><span id="total-usdc">0.00 USDC</span></div>
-        <button id="pay-btn" class="w-full py-3 bg-indigo-600 rounded text-white disabled:opacity-50" disabled><i class="fas fa-wallet mr-2"></i>Pay with Polygon</button>
-      </div>
-    </aside>
-  </main>
+    <!-- === Message Modal === -->
+    <div id="message-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full text-center">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <p id="modal-message" class="mb-6"></p>
+            <button id="modal-close-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg">OK</button>
+        </div>
+    </div>
 
-<script>
-const STORAGE_KEY = 'foodSpotConfig_v1';
+    <!-- === Order Status Modal === -->
+    <div id="order-status-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full text-center">
+            <h3 class="text-2xl font-bold mb-2">Order Status</h3>
+            <p id="order-status-id" class="text-sm text-gray-400 mb-4"></p>
+            <div class="flex items-center justify-center space-x-2 mb-6">
+                <i id="status-icon" class="fas fa-sync-alt fa-spin text-yellow-400 text-3xl"></i>
+                <p id="status-message" class="text-xl font-semibold">Placing Order...</p>
+            </div>
+            <p class="text-sm text-gray-300">This page will update automatically. You can close it, but your order ID is important!</p>
+            <button id="order-status-close-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg mt-4">Close</button>
+        </div>
+    </div>
 
-function readConfig() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){ return null; }
-}
+    <script type="module">
+        // --- Import Firebase SDK functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-let cfg = readConfig();
-if (!cfg) {
-  // no config — inform user
-  document.getElementById('menu-items').innerHTML = '<div class="p-6 bg-gray-700 rounded">This kiosk has not been configured yet. Please ask the owner to complete setup in the admin panel.</div>';
-} else {
-  document.getElementById('store-title').textContent = cfg.storeName || 'The Food Spot';
-  const products = cfg.products || [];
-  renderProducts(products);
-}
+        // --- 1. Global State & Configuration ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        let config = {
+            storeName: 'The Food Spot',
+            storeLogo: '',
+            products: []
+        };
+        let cart = {};
+        let isAuthReady = false;
 
-let cart = {};
-function renderProducts(products) {
-  const container = document.getElementById('menu-items');
-  container.innerHTML = '';
-  if (!products || products.length === 0) {
-    container.innerHTML = '<div class="p-6 bg-gray-700 rounded">No products configured.</div>';
-    return;
-  }
-  products.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'bg-gray-700 p-4 rounded';
-    card.innerHTML = `
-      <img src="${p.imageUrl || 'https://placehold.co/400x200/4a5568/a0aec0?text=No+Image'}" class="w-full h-36 object-cover rounded mb-3"/>
-      <h4 class="font-semibold text-white">${p.name}</h4>
-      <p class="text-gray-300 text-sm mb-2">${p.description || ''}</p>
-      <div class="flex justify-between items-center">
-        <div class="text-yellow-300 font-bold">$${Number(p.price||0).toFixed(2)}</div>
-        <button class="add-btn px-3 py-2 bg-indigo-500 rounded text-white" data-id="${p.id}">Add</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
+        // --- Firebase Initialization
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let userId = '';
 
-  document.querySelectorAll('.add-btn').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const id = e.currentTarget.dataset.id;
-      addToCart(id);
-    });
-  });
-}
+        // --- 2. DOM Elements ---
+        const kioskStoreTitle = document.getElementById('kiosk-store-title');
+        const menuItemsContainer = document.getElementById('menu-items');
+        const orderList = document.getElementById('order-list');
+        const totalUsdSpan = document.getElementById('total-usd');
+        const totalUsdcSpan = document.getElementById('total-usdc');
+        const payBtn = document.getElementById('pay-btn');
 
-function addToCart(itemId) {
-  const product = (cfg.products||[]).find(x=>x.id===itemId);
-  if (!product) return;
-  cart[itemId] = (cart[itemId]||0) + 1;
-  updateCartUI();
-}
+        // Modals
+        const messageModal = document.getElementById('message-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const orderStatusModal = document.getElementById('order-status-modal');
+        const orderStatusId = document.getElementById('order-status-id');
+        const statusIcon = document.getElementById('status-icon');
+        const statusMessage = document.getElementById('status-message');
+        const orderStatusCloseBtn = document.getElementById('order-status-close-btn');
 
-function removeFromCart(itemId) {
-  if (!cart[itemId]) return;
-  cart[itemId]--;
-  if (cart[itemId] <= 0) delete cart[itemId];
-  updateCartUI();
-}
+        // --- 3. Configuration for Blockchain Payments ---
+        const USDC_POLYGON_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+        // WARNING: This is a critical security vulnerability. For a commercial app, this should be stored securely.
+        const RECEIVING_WALLET = "YOUR_WALLET_ADDRESS_HERE"; 
+        const usdcAbi = ["function transfer(address to, uint256 amount) returns (bool)"];
+        const polygonChainId = '0x89';
+        
+        // --- 4. Firestore & Core Functions ---
 
-function updateCartUI(){
-  const orderList = document.getElementById('order-list');
-  orderList.innerHTML = '';
-  const items = Object.keys(cart);
-  if (items.length === 0) {
-    orderList.innerHTML = '<p class="text-gray-400">No items yet.</p>';
-    document.getElementById('pay-btn').disabled = true;
-    document.getElementById('total-usd').textContent = '$0.00';
-    document.getElementById('total-usdc').textContent = '0.00 USDC';
-    return;
-  }
-  let total = 0;
-  items.forEach(id => {
-    const qty = cart[id];
-    const prod = (cfg.products||[]).find(p=>p.id===id);
-    if (!prod) return;
-    total += prod.price * qty;
-    const row = document.createElement('div');
-    row.className = 'flex justify-between items-center bg-gray-800 p-2 rounded';
-    row.innerHTML = `
-      <div>
-        <div class="font-semibold">${prod.name} x ${qty}</div>
-        <div class="text-xs text-gray-400">$${prod.price.toFixed(2)} each</div>
-      </div>
-      <div class="text-right">
-        <div class="font-semibold">$${(prod.price*qty).toFixed(2)}</div>
-        <button class="text-red-400 remove-btn text-sm" data-id="${id}">Remove</button>
-      </div>
-    `;
-    orderList.appendChild(row);
-  });
-  document.querySelectorAll('.remove-btn').forEach(b=>b.addEventListener('click', e=>removeFromCart(e.currentTarget.dataset.id)));
-  document.getElementById('total-usd').textContent = '$' + total.toFixed(2);
-  document.getElementById('total-usdc').textContent = total.toFixed(2) + ' USDC';
-  document.getElementById('pay-btn').disabled = false;
-}
+        // Function to initialize all Firestore listeners once authenticated
+        function initializeFirestoreListeners() {
+            // Listen for store info changes
+            const storeInfoRef = doc(db, `artifacts/${appId}/users/${userId}/config/storeInfo`);
+            onSnapshot(storeInfoRef, (doc) => {
+                if (doc.exists()) {
+                    config.storeName = doc.data().storeName;
+                    config.storeLogo = doc.data().storeLogo;
+                    if (kioskStoreTitle) kioskStoreTitle.textContent = config.storeName || 'The Food Spot';
+                }
+            }, (error) => { console.error("Error fetching store info:", error); });
 
-/* === Polygon payment code (unchanged) === */
-const polygonChainId = '0x89'; // polygon mainnet (change for testnet)
-const paymentAddress = "0x5093873aa4ec1a9a9eba26e26e41cfb13b35cbba"; // replace with your payment address
-const usdcContractAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
-const usdcAbi = ["function transfer(address to, uint256 amount) returns (bool)"];
+            // Listen for menu items changes
+            const productsRef = collection(db, `artifacts/${appId}/users/${userId}/products`);
+            onSnapshot(productsRef, (querySnapshot) => {
+                config.products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderKioskMenuItems();
+            }, (error) => { console.error("Error fetching products:", error); });
+        }
+        
+        // --- UI State Management functions
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+        
+        function showOrderStatusModal(orderId, initialStatus) {
+            orderStatusId.textContent = `Order ID: ${orderId}`;
+            updateOrderStatusModal(initialStatus);
+            orderStatusModal.classList.remove('hidden');
+        }
 
-async function isMetaMaskInstalled() {
-  return typeof window.ethereum !== 'undefined';
-}
+        function updateOrderStatusModal(status) {
+            switch (status) {
+                case 'new':
+                    statusIcon.className = 'fas fa-sync-alt fa-spin text-yellow-400 text-3xl';
+                    statusMessage.textContent = 'Order Placed!';
+                    break;
+                case 'in_progress':
+                    statusIcon.className = 'fas fa-hourglass-half fa-spin text-indigo-400 text-3xl';
+                    statusMessage.textContent = 'Order In Progress';
+                    break;
+                case 'ready_for_pickup':
+                    statusIcon.className = 'fas fa-bell text-green-400 text-3xl animate-pulse';
+                    statusMessage.textContent = 'Ready for Pickup!';
+                    break;
+                default:
+                    statusIcon.className = 'fas fa-check-circle text-gray-400 text-3xl';
+                    statusMessage.textContent = `Status: ${status}`;
+            }
+        }
+        
+        // --- Kiosk-specific functions
+        function renderKioskMenuItems() {
+            const loadingKioskMenu = document.getElementById('loading-kiosk-menu');
+            if (loadingKioskMenu) {
+                loadingKioskMenu.classList.add('hidden');
+            }
+            if(kioskStoreTitle) kioskStoreTitle.textContent = config.storeName || 'The Food Spot';
+            if(menuItemsContainer) menuItemsContainer.innerHTML = '';
+            if (!config.products || config.products.length === 0) {
+              if (menuItemsContainer) menuItemsContainer.innerHTML = '<div class="p-6 bg-gray-700 rounded text-center">This kiosk has not been configured yet.</div>';
+                return;
+            }
+            config.products.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-700 p-4 rounded-xl shadow-lg flex flex-col';
+                card.innerHTML = `
+                    <img src="${p.imageUrl || 'https://placehold.co/400x200/4a5568/a0aec0?text=No+Image'}" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/400x200/4a5568/a0aec0?text=No+Image';"
+                         class="w-full h-36 object-cover rounded-lg mb-3">
+                    <h4 class="font-semibold text-white">${p.name}</h4>
+                    <p class="text-gray-300 text-sm mb-2">${p.description || ''}</p>
+                    <div class="flex justify-between items-center mt-auto">
+                        <div class="text-yellow-300 font-bold">$${Number(p.price||0).toFixed(2)}</div>
+                        <button class="add-btn px-4 py-2 bg-indigo-500 rounded-lg text-white font-semibold hover:bg-indigo-600 transition" data-id="${p.id}">Add</button>
+                    </div>
+                `;
+                if(menuItemsContainer) menuItemsContainer.appendChild(card);
+            });
+            document.querySelectorAll('.add-btn').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    addToCart(id);
+                });
+            });
+        }
 
-async function switchNetworkToPolygon() {
-  try {
-    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: polygonChainId }]});
-  } catch (err) {
-    if (err.code === 4902) {
-      await window.ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params:[{
-          chainId: polygonChainId,
-          chainName: 'Polygon Mainnet',
-          rpcUrls: ['https://polygon-rpc.com/'],
-          nativeCurrency: {name:'MATIC',symbol:'MATIC',decimals:18},
-          blockExplorerUrls:['https://polygonscan.com/']
-        }]
-      });
-    } else {
-      throw err;
-    }
-  }
-}
+        function addToCart(itemId) {
+            const product = (config.products||[]).find(x => x.id === itemId);
+            if (!product) return;
+            cart[itemId] = (cart[itemId] || 0) + 1;
+            updateCartUI();
+        }
 
-document.getElementById('pay-btn').addEventListener('click', async () => {
-  const totalUSD = parseFloat(document.getElementById('total-usd').textContent.replace('$','')) || 0;
-  if (totalUSD <= 0) return alert('Cart is empty');
+        function removeFromCart(itemId) {
+            if (!cart[itemId]) return;
+            cart[itemId]--;
+            if (cart[itemId] <= 0) delete cart[itemId];
+            updateCartUI();
+        }
 
-  if (!await isMetaMaskInstalled()) return alert('MetaMask not installed.');
+        function updateCartUI() {
+            if (orderList) orderList.innerHTML = '';
+            const items = Object.keys(cart);
+            let total = 0;
+            if (items.length === 0) {
+                if (orderList) orderList.innerHTML = '<p class="text-gray-400">No items yet.</p>';
+                if(payBtn) payBtn.disabled = true;
+            } else {
+                items.forEach(id => {
+                    const qty = cart[id];
+                    const prod = (config.products || []).find(p => p.id === id);
+                    if (!prod) return;
+                    total += prod.price * qty;
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center bg-gray-700 p-2 rounded-lg';
+                    row.innerHTML = `
+                        <div>
+                            <div class="font-semibold">${prod.name} x ${qty}</div>
+                            <div class="text-xs text-gray-400">$${Number(prod.price).toFixed(2)} each</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold">$${(prod.price * qty).toFixed(2)}</div>
+                            <button class="text-red-400 remove-btn text-sm" data-id="${id}">Remove</button>
+                        </div>
+                    `;
+                    if (orderList) orderList.appendChild(row);
+                });
+                document.querySelectorAll('.remove-btn').forEach(b => b.addEventListener('click', e => removeFromCart(e.currentTarget.dataset.id)));
+                if(payBtn) payBtn.disabled = false;
+            }
+            if(totalUsdSpan) totalUsdSpan.textContent = '$' + total.toFixed(2);
+            if(totalUsdcSpan) totalUsdcSpan.textContent = total.toFixed(2) + ' USDC';
+        }
 
-  try {
-    document.getElementById('pay-btn').textContent = 'Connecting...';
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-    await switchNetworkToPolygon();
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const usdc = new ethers.Contract(usdcContractAddress, usdcAbi, signer);
-    const amount = ethers.parseUnits(totalUSD.toFixed(2), 6); // USDC 6 decimals
-    const tx = await usdc.transfer(paymentAddress, amount);
-    await tx.wait();
-    alert('Payment successful — thank you!');
-    // create a simple order and store in config (optional)
-    const order = {
-      id: 'ord_' + Math.random().toString(36).slice(2,9),
-      timestamp: new Date().toLocaleString(),
-      items: Object.keys(cart).map(id => {
-        const p = cfg.products.find(x=>x.id===id);
-        return { id, name: p.name, price: p.price, quantity: cart[id] };
-      }),
-      total: totalUSD,
-      status: 'new'
-    };
-    // save to config orders
-    cfg.orders = cfg.orders || [];
-    cfg.orders.push(order);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); // persist
-    cart = {}; updateCartUI();
-  } catch (err) {
-    console.error(err);
-    alert('Payment failed: ' + (err.message||err));
-  } finally {
-    document.getElementById('pay-btn').textContent = 'Pay with Polygon';
-  }
-});
-</script>
+        // --- Blockchain Payment functions
+        async function switchNetworkToPolygon() {
+            try {
+                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: polygonChainId }]});
+            } catch (err) {
+                if (err.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params:[{
+                                chainId: polygonChainId,
+                                chainName: 'Polygon Mainnet',
+                                rpcUrls: ['https://polygon-rpc.com/'],
+                                nativeCurrency: {name:'MATIC',symbol:'MATIC',decimals:18},
+                                blockExplorerUrls:['https://polygonscan.com/']
+                            }]
+                        });
+                    } catch (addError) {
+                        showModal('Error', 'Failed to add Polygon network to MetaMask.');
+                        throw addError;
+                    }
+                } else {
+                    showModal('Error', 'Failed to switch to Polygon network.');
+                    throw err;
+                }
+            }
+        }
+        
+        async function processPayment() {
+            const totalUSD = parseFloat(totalUsdSpan.textContent.replace('$', '')) || 0;
+            if (totalUSD <= 0) {
+                showModal('Error', 'Your cart is empty.');
+                return;
+            }
+
+            if (typeof window.ethereum === 'undefined') {
+                showModal('Error', 'Please install MetaMask to proceed with payment.');
+                return;
+            }
+            
+            let orderId;
+            try {
+                payBtn.textContent = 'Processing...';
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                await switchNetworkToPolygon();
+
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                const usdcContract = new ethers.Contract(USDC_POLYGON_ADDRESS, usdcAbi, signer);
+                const amount = ethers.parseUnits(totalUSD.toFixed(2), 6); // USDC has 6 decimals
+
+                const tx = await usdcContract.transfer(RECEIVING_WALLET, amount);
+                await tx.wait();
+
+                // Add the order to Firestore
+                const ordersCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/orders`);
+                const order = {
+                    timestamp: new Date().toLocaleString(),
+                    items: Object.keys(cart).map(id => {
+                        const p = (config.products || []).find(x => x.id === id);
+                        return { id, name: p.name, price: p.price, quantity: cart[id] };
+                    }),
+                    total: totalUSD,
+                    status: 'new'
+                };
+                const docRef = await addDoc(ordersCollectionRef, order);
+                orderId = docRef.id;
+
+                showOrderStatusModal(orderId, 'new');
+
+                // Listen for status changes on this specific order
+                const orderDocRef = doc(db, `artifacts/${appId}/users/${userId}/orders/${orderId}`);
+                onSnapshot(orderDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const updatedStatus = docSnap.data().status;
+                        updateOrderStatusModal(updatedStatus);
+                    }
+                });
+
+                // Reset the cart and UI
+                cart = {};
+                updateCartUI();
+                
+            } catch (err) {
+                console.error(err);
+                showModal('Payment Failed', `An error occurred: ${err.message}`);
+            } finally {
+                payBtn.textContent = 'Pay with Polygon';
+            }
+        }
+
+        // --- 5. Event Listeners & Initialization ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Authenticated with user ID:", user.uid);
+                userId = user.uid;
+                isAuthReady = true;
+                initializeFirestoreListeners();
+            } else {
+                console.log("No user authenticated. Signing in anonymously.");
+                try {
+                    const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (token) {
+                         await signInWithCustomToken(auth, token);
+                    } else {
+                         await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                }
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if(modalCloseBtn) modalCloseBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
+            if(orderStatusCloseBtn) orderStatusCloseBtn.addEventListener('click', () => orderStatusModal.classList.add('hidden'));
+            if(payBtn) payBtn.addEventListener('click', processPayment);
+        });
+    </script>
+
 </body>
 </html>
